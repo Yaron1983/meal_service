@@ -184,13 +184,11 @@ flowchart TD
   - Routes requests to the appropriate microservice (e.g., authentication, meals).
   - Handles cross-cutting concerns such as authentication, rate limiting, and logging.
 - **Possible Technologies:**  
-  - Kong, NGINX, or AWS API Gateway.
+  - NGINX or AWS API Gateway.
 
 ### 4.4 Authentication & OTP
 - **JWT (JSON Web Token):**  
   - Used for stateless, secure authentication between client and backend.
-- **External SMS/OTP Provider:**  
-  - Services like Twilio, Vonage, or a local provider for sending OTP codes to users.
 
 ### 4.5 Containerization & Deployment
 - **Docker:**  
