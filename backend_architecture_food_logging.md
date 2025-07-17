@@ -202,4 +202,102 @@
 
 ## 3. Architecture Diagram
 
+```mermaid
+flowchart TD
+    A["Mobile App"] -- "API Requests" --> B["API Gateway"]
+    B -- "Auth Service" --> C["Authentication Microservice (Django REST)"]
+    B -- "Meals Service" --> D["Meals Microservice (Django REST)"]
+    C -- "User Data" --> E["PostgreSQL Database (Users)"]
+    D -- "Meal Data" --> F["PostgreSQL Database (Meals)"]
+    D -- "Food Catalog" --> G["PostgreSQL Database (Food Catalog)"]
+    C -- "OTP Service" --> H["External SMS/OTP Provider"]
 ```
+
+---
+
+## 3.1 Meal Logging Flowchart
+
+Below is a flowchart describing the process of logging a meal, including food selection from the catalog:
+
+```mermaid
+flowchart TD
+    A["User opens Mobile App"] --> B["User logs in with phone number"]
+    B --> C["Receives OTP and enters it"]
+    C --> D["App sends OTP to Auth Service"]
+    D --> E["Auth Service verifies OTP"]
+    E -- "Success" --> F["App receives JWT token"]
+    F --> G["User enters meal details"]
+    G --> G1["User selects foods from catalog"]
+    G1 --> H["App sends meal data with food_id(s) and JWT to Meals Service"]
+    H --> I["Meals Service validates token"]
+    I --> J["Meals Service saves meal and items in DB"]
+    J --> K["Confirmation sent to App"]
+```
+
+---
+
+## 4. Technology Stack & Rationale
+
+### 4.1 Backend Framework: **Django + Django REST Framework**
+- **Why Django?**
+  - Mature, robust, and secure web framework.
+  - Built-in admin interface for easy data management.
+  - Excellent support for relational databases and ORM.
+  - Django REST Framework (DRF) makes building RESTful APIs straightforward and well-documented.
+- **Why Microservices?**
+  - Each core feature (e.g., authentication, meal logging) is developed and deployed as an independent service.
+  - Improves scalability, maintainability, and allows independent development and deployment.
+  - Each service can have its own database, reducing coupling and improving data security.
+
+### 4.2 Database: **PostgreSQL**
+- **Why PostgreSQL?**
+  - Powerful, open-source relational database.
+  - Excellent support for complex queries and data integrity.
+  - Scalable and reliable for both small and large-scale applications.
+  - Well-supported by Django ORM.
+
+### 4.3 API Gateway
+- **Role:**  
+  - Central entry point for all client requests.
+  - Routes requests to the appropriate microservice (e.g., authentication, meals).
+  - Handles cross-cutting concerns such as authentication, rate limiting, and logging.
+- **Possible Technologies:**  
+  - NGINX or AWS API Gateway.
+
+### 4.4 Authentication & OTP
+- **JWT (JSON Web Token):**  
+  - Used for stateless, secure authentication between client and backend.
+
+### 4.5 Containerization & Deployment
+- **Docker:**  
+  - Each microservice runs in its own container for isolation and easy deployment.
+- **Orchestration:**  
+  - Kubernetes or Docker Compose for managing multiple services.
+- **Cloud Hosting:**  
+  - AWS, Google Cloud, or Azure for scalable, managed infrastructure.
+
+### 4.6 API Documentation
+- **OpenAPI/Swagger:**  
+  - Auto-generated documentation for all REST endpoints, making it easy for frontend and QA teams to understand and test the API.
+
+---
+
+## 5. Design Rationale
+
+- **Django** was chosen for its reliability, security features, and rapid development capabilities, especially when combined with Django REST Framework for API creation.
+- **Microservices architecture** allows each feature to scale independently, simplifies codebases, and enables teams to work in parallel.
+- **PostgreSQL** is a robust, production-grade database that integrates seamlessly with Django and supports complex data relationships.
+- **API Gateway** centralizes request management, improving security and maintainability.
+- **JWT** provides secure, stateless authentication, ideal for mobile applications.
+- **Docker** and orchestration tools ensure the system is portable, scalable, and easy to deploy in any environment.
+- **Food catalog** enables consistent, accurate nutritional tracking and supports future extensibility (e.g., adding more nutrients, food search, etc).
+
+---
+
+## 6. API Documentation
+
+- All REST endpoints are documented using OpenAPI (Swagger), providing clear, interactive documentation for developers and testers.
+- Example requests and responses are included for each endpoint.
+- The documentation is auto-generated and kept up-to-date with the codebase, ensuring accuracy and ease of use.
+
+---
