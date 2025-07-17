@@ -51,6 +51,8 @@
 
 ## 2. API List (OpenAPI Style)
 
+> **Note:** Starting from this implementation, each meal item (meal_item) references the food catalog using food_id. You may send custom nutritional values (override), but by default, values are calculated automatically based on the catalog.
+
 ### 2.1 Login
 - **POST /api/auth/login**
   - **Request Body:**  
@@ -84,21 +86,22 @@
       "notes": "string",
       "items": [
         {
-          "food_id": int,
-          "quantity": float,
-          "unit": "string",
-          "calories": float, // optional override
-          "protein": float,  // optional override
-          "carbs": float,    // optional override
-          "fat": float       // optional override
+          "food_id": 12,
+          "quantity": 150,
+          "unit": "g",
+          "calories": 200,   // Optional, auto-calculated if not provided
+          "protein": 15,     // Optional, auto-calculated if not provided
+          "carbs": 30,       // Optional, auto-calculated if not provided
+          "fat": 5           // Optional, auto-calculated if not provided
         }
       ]
     }
     ```
   - **Response:**
     ```json
-    { "meal_id": int }
+    { "meal_id": 101 }
     ```
+  - **Note:** If nutritional values are not provided, the system will calculate them automatically based on the food catalog values and the specified quantity/unit.
 
 ### 2.4 Get Meals List
 - **GET /api/meals**
@@ -110,21 +113,26 @@
     ```json
     [
       {
-        "id": int,
-        "meal_time": "datetime",
-        "meal_type": "string",
-        "notes": "string",
+        "id": 101,
+        "meal_time": "2024-06-01T12:00:00Z",
+        "meal_type": "lunch",
+        "notes": "Post-workout meal",
         "items": [
           {
-            "food_name": "string",
-            "quantity": float,
-            "unit": "string",
-            "calories": float
+            "food_id": 12,
+            "food_name": "Chicken Breast",
+            "quantity": 150,
+            "unit": "g",
+            "calories": 200,
+            "protein": 15,
+            "carbs": 30,
+            "fat": 5
           }
         ]
       }
     ]
     ```
+  - **Note:** food_name and nutritional values are fetched automatically from the catalog based on food_id, unless an override was provided.
 
 ### 2.5 Update Meal
 - **PUT /api/meals/{meal_id}**
@@ -145,42 +153,50 @@
 
 ### 2.7 Food Catalog Endpoints
 - **GET /api/foods**
-  - **Description:** Get list of foods from catalog
+  - **Description:** Retrieve all foods from the catalog (for use in the app, e.g., for search/selection).
   - **Response:**
     ```json
     [
       {
-        "id": int,
-        "name": "string",
-        "calories": float,
-        "protein": float,
-        "carbs": float,
-        "fat": float,
-        "fiber": float,
-        "sugar": float,
-        "sodium": float
+        "id": 12,
+        "name": "Chicken Breast",
+        "calories": 130,
+        "protein": 22,
+        "carbs": 0,
+        "fat": 3,
+        "fiber": 0,
+        "sugar": 0,
+        "sodium": 50
       }
     ]
     ```
 - **POST /api/foods** (admin only)
-  - **Description:** Add new food to catalog
+  - **Description:** Add a new food to the catalog
   - **Request Body:**
     ```json
     {
-      "name": "string",
-      "calories": float,
-      "protein": float,
-      "carbs": float,
-      "fat": float,
-      "fiber": float,
-      "sugar": float,
-      "sodium": float
+      "name": "Chicken Breast",
+      "calories": 130,
+      "protein": 22,
+      "carbs": 0,
+      "fat": 3,
+      "fiber": 0,
+      "sugar": 0,
+      "sodium": 50
     }
     ```
   - **Response:**
     ```json
-    { "food_id": int }
+    { "food_id": 12 }
     ```
+
+---
+
+## 2.x Example: Automatic Nutritional Value Calculation
+> For example, if you select food_id=12 (Chicken Breast, 130 calories per 100g) and send quantity=150, the system will return:
+> calories = 130 * 1.5 = 195
+> protein = 22 * 1.5 = 33
+> and so on.
 
 ---
 
@@ -193,14 +209,15 @@ flowchart TD
     B -- "Meals Service" --> D["Meals Microservice (Django REST)"]
     C -- "User Data" --> E["PostgreSQL Database (Users)"]
     D -- "Meal Data" --> F["PostgreSQL Database (Meals)"]
-    C -- "OTP Service" --> G["External SMS/OTP Provider"]
+    D -- "Food Catalog" --> G["PostgreSQL Database (Food Catalog)"]
+    C -- "OTP Service" --> H["External SMS/OTP Provider"]
 ```
 
 ---
 
 ## 3.1 Meal Logging Flowchart
 
-Below is a flowchart describing the process of logging a meal, now including בחירת מזון מקטלוג:
+Below is a flowchart describing the process of logging a meal, including food selection from the catalog:
 
 ```mermaid
 flowchart TD
@@ -273,3 +290,14 @@ flowchart TD
 - **API Gateway** centralizes request management, improving security and maintainability.
 - **JWT** provides secure, stateless authentication, ideal for mobile applications.
 - **Docker** and orchestration tools ensure the system is portable, scalable, and easy to deploy in any environment.
+- **Food catalog** enables consistent, accurate nutritional tracking and supports future extensibility (e.g., adding more nutrients, food search, etc).
+
+---
+
+## 6. API Documentation
+
+- All REST endpoints are documented using OpenAPI (Swagger), providing clear, interactive documentation for developers and testers.
+- Example requests and responses are included for each endpoint.
+- The documentation is auto-generated and kept up-to-date with the codebase, ensuring accuracy and ease of use.
+
+---
