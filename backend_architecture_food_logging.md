@@ -19,15 +19,33 @@
 | notes         | TEXT         | Notes                              |
 | created_at    | TIMESTAMP    | Record creation date               |
 
+### Food Catalog Table (`food_catalog`)
+| Column Name   | Data Type     | Description                |
+|---------------|--------------|----------------------------|
+| id            | INTEGER      | Food ID (Primary Key)      |
+| name          | VARCHAR(100) | Name of the food           |
+| calories      | FLOAT        | Calories per 100g/unit     |
+| protein       | FLOAT        | Protein (g) per 100g/unit  |
+| carbs         | FLOAT        | Carbs (g) per 100g/unit    |
+| fat           | FLOAT        | Fat (g) per 100g/unit      |
+| fiber         | FLOAT        | Fiber (g) per 100g/unit    |
+| sugar         | FLOAT        | Sugar (g) per 100g/unit    |
+| sodium        | FLOAT        | Sodium (mg) per 100g/unit  |
+| ...           | ...          | Additional nutrients       |
+
 ### Meal Items Table (`meal_items`)
 | Column Name   | Data Type     | Description                        |
 |---------------|--------------|------------------------------------|
 | id            | INTEGER      | Item ID (Primary Key)              |
 | meal_id       | INTEGER      | Meal ID (Foreign Key)              |
-| food_name     | VARCHAR(100) | Name of the food                   |
+| food_id       | INTEGER      | Food ID (Foreign Key to food_catalog) |
 | quantity      | FLOAT        | Quantity                           |
 | unit          | VARCHAR(20)  | Unit (g, ml, piece, etc.)          |
-| calories      | FLOAT        | Calories (optional)                |
+| calories      | FLOAT        | Calories (optional, override)      |
+| protein       | FLOAT        | Protein (g, optional, override)    |
+| carbs         | FLOAT        | Carbs (g, optional, override)      |
+| fat           | FLOAT        | Fat (g, optional, override)        |
+| ...           | ...          | Additional nutrients (optional)    |
 
 ---
 
@@ -66,10 +84,13 @@
       "notes": "string",
       "items": [
         {
-          "food_name": "string",
+          "food_id": int,
           "quantity": float,
           "unit": "string",
-          "calories": float
+          "calories": float, // optional override
+          "protein": float,  // optional override
+          "carbs": float,    // optional override
+          "fat": float       // optional override
         }
       ]
     }
@@ -122,6 +143,45 @@
     { "success": true }
     ```
 
+### 2.7 Food Catalog Endpoints
+- **GET /api/foods**
+  - **Description:** Get list of foods from catalog
+  - **Response:**
+    ```json
+    [
+      {
+        "id": int,
+        "name": "string",
+        "calories": float,
+        "protein": float,
+        "carbs": float,
+        "fat": float,
+        "fiber": float,
+        "sugar": float,
+        "sodium": float
+      }
+    ]
+    ```
+- **POST /api/foods** (admin only)
+  - **Description:** Add new food to catalog
+  - **Request Body:**
+    ```json
+    {
+      "name": "string",
+      "calories": float,
+      "protein": float,
+      "carbs": float,
+      "fat": float,
+      "fiber": float,
+      "sugar": float,
+      "sodium": float
+    }
+    ```
+  - **Response:**
+    ```json
+    { "food_id": int }
+    ```
+
 ---
 
 ## 3. Architecture Diagram
@@ -140,7 +200,7 @@ flowchart TD
 
 ## 3.1 Meal Logging Flowchart
 
-Below is a flowchart describing the process of logging a meal, from the mobile app through authentication to saving the meal in the database:
+Below is a flowchart describing the process of logging a meal, now including בחירת מזון מקטלוג:
 
 ```mermaid
 flowchart TD
@@ -150,9 +210,10 @@ flowchart TD
     D --> E["Auth Service verifies OTP"]
     E -- "Success" --> F["App receives JWT token"]
     F --> G["User enters meal details"]
-    G --> H["App sends meal data with JWT to Meals Service"]
+    G --> G1["User selects foods from catalog"]
+    G1 --> H["App sends meal data with food_id(s) and JWT to Meals Service"]
     H --> I["Meals Service validates token"]
-    I --> J["Meals Service saves meal in DB"]
+    I --> J["Meals Service saves meal and items in DB"]
     J --> K["Confirmation sent to App"]
 ```
 
